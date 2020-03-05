@@ -10,3 +10,7 @@
 
 - name: 'rpi-update'
   shell: rpi-update  
+
+- name: 'rfkill unlock'
+  shell: rfkill unblock all
+  
