@@ -14,3 +14,13 @@
 - name: 'rfkill unlock'
   shell: rfkill unblock all
   
+- name: Install hostapd  (state=present is optional)
+  apt:
+    name: hostapd
+    state: present
+
+- name: Install bridge-utils  (state=present is optional)
+  apt:
+    name: bridge-utils
+    state: present
+
