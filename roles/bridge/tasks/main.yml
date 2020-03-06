@@ -14,8 +14,13 @@
     name: hostapd
     state: stopped
 
+- name: check if br0 exist
+  shell: $(brctl show | grep br0 | awk '{print $6}' | wc -l)
+  register: countBr0tBridgesDevices
+
 - name: brctl addbr br0
   shell: brctl addbr br0
+  when: countBr0tBridgesDevices == 0
 
 - name: write hostapd.conf
   copy:
