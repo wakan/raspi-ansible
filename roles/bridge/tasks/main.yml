@@ -48,31 +48,31 @@
 
 - name: network interfaces allow-hotplug wlan0
   lineinfile:
-    path: /etc/network
+    path: /etc/network/interfaces
     regexp: '^allow-hotplug wlan0'
     line: allow-hotplug wlan0
 
 - name: network interfaces iface  wlan0 inet manual
   lineinfile:
-    path: /etc/network
+    path: /etc/network/interfaces
     regexp: '^iface  wlan0 inet manual'
     line: iface wlan0 inet manual
     
 - name: network interfaces auto br0
   lineinfile:
-    path: /etc/network
+    path: /etc/network/interfaces
     regexp: '^auto br0'
     line: auto br0
 
 - name: network iface wlan0 inet dhcp
   lineinfile:
-    path: /etc/network
+    path: /etc/network/interfaces
     regexp: '^iface wlan0 inet dhcp'
     line: iface wlan0 inet dhcp
 
 - name: network iface bridge_ports eth0 wlan0
   lineinfile:
-    path: /etc/network
+    path: /etc/network/interfaces
     regexp: '^bridge_ports eth0 wlan0'
     line: bridge_ports eth0 wlan0
 
