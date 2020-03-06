@@ -10,4 +10,4 @@ repo_dir=${dir}/repo
 mkdir -p ${dir}
 echo "[pi]\n$(uname -n)" > ${hosts}
 
-ansible-pull -U https://github.com/wakan/raspi-ansible.git -i ${hosts} -d ${repo_dir} -K main.yml
+ansible-pull -U https://github.com/wakan/raspi-ansible.git -i ${hosts} -d ${repo_dir} main.yml
