@@ -14,5 +14,5 @@
     name: hostapd
     state: stopped
 
-- name: brct addbr br0
-  shell: brct addbr br0
+- name: brctl addbr br0
+  shell: brctl addbr br0
