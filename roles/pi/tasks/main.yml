@@ -21,3 +21,7 @@
     name: bridge-utils
     state: present
 
+- name: stop service hostapd on debian, if running
+  systemd:
+    name: hostapd
+    state: stopped
