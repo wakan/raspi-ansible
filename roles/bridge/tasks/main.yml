@@ -46,5 +46,47 @@
     regexp: '^#DEAMON_CONF="/etc/hostapd/hostapd.conf"'
     line: DEAMON_CONF="/etc/hostapd/hostapd.conf"
 
-- name: addif br0 eth0
+- name: network interfaces allow-hotplug wlan0
+  lineinfile:
+    path: /etc/network
+    regexp: '^allow-hotplug wlan0'
+    line: allow-hotplug wlan0
+
+- name: network interfaces iface  wlan0 inet manual
+  lineinfile:
+    path: /etc/network
+    regexp: '^iface  wlan0 inet manual'
+    line: iface wlan0 inet manual
+    
+- name: network interfaces auto br0
+  lineinfile:
+    path: /etc/network
+    regexp: '^auto br0'
+    line: auto br0
+
+- name: network iface wlan0 inet dhcp
+  lineinfile:
+    path: /etc/network
+    regexp: '^iface wlan0 inet dhcp'
+    line: iface wlan0 inet dhcp
+
+- name: network iface bridge_ports eth0 wlan0
+  lineinfile:
+    path: /etc/network
+    regexp: '^bridge_ports eth0 wlan0'
+    line: bridge_ports eth0 wlan0
+
+- name: dhcpcd denyinterfaces wlan0
+  lineinfile:
+    path: /etc/dhcpcd.conf
+    regexp: '^denyinterfaces wlan0'
+    line: denyinterfaces wlan0
+
+- name: dhcpcd denyinterfaces eth0
+  lineinfile:
+    path: /etc/dhcpcd.conf
+    regexp: '^denyinterfaces eth0'
+    line: denyinterfaces eth0
+
+- name: addif br0 eth0 check si plusieurs lancement
   shell: brctl addif br0 eth0
