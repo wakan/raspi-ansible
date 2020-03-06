@@ -24,7 +24,7 @@
 
 - name: write hostapd.conf
   copy:
-    dest: "/etc/hostapd.conf"
+    dest: "/etc/hostapd/hostapd.conf"
     content: |
       interface=wlan0
       bridge=br0
