@@ -8,9 +8,6 @@
 - name: 'Remove all dependenices no longer required'
   shell: apt-get autoremove
 
-- name: 'rpi-update'
-  shell: rpi-update  
-
 - name: 'rfkill unlock'
   shell: rfkill unblock all
   
