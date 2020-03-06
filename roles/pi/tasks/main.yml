@@ -6,7 +6,7 @@
   action: apt upgrade=safe
 
 - name: 'Remove all dependenices no longer required'
-   apt:
+  apt:
     autoremove: yes
     purge: yes
 
