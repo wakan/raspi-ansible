@@ -88,5 +88,5 @@
     regexp: '^denyinterfaces eth0'
     line: denyinterfaces eth0
 
-- name: addif br0 eth0 check si plusieurs lancement
-  shell: brctl addif br0 eth0
+#- name: addif br0 eth0 check si plusieurs lancement
+#  shell: brctl addif br0 eth0
