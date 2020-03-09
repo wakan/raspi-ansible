@@ -72,8 +72,6 @@
       wpa_pairwise=TKIP
       rsn_pairwise=CCMP
 
-
-
 - name: unmask hostapd
   systemd:
     name: hostapd
