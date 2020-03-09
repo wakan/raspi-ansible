@@ -26,17 +26,6 @@
     regexp: '^denyinterfaces eth0'
     line: denyinterfaces eth0
 
-- name: check if br0 exist
-  shell: brctl show | grep br0 | awk '{print $6}' | wc -l
-  register: countBr0tBridgesDevices
-
-- name: brctl addbr br0
-  shell: brctl addbr br0
-  when: countBr0tBridgesDevices.stdout.find('0') != -1
-
-- name: addif br0 eth0 check si plusieurs lancement
-  shell: brctl addif br0 eth0
-
 - name: write bridge-br0.netdev
   copy:
     dest: "/etc/systemd/network/bridge-br0.netdev"
@@ -65,11 +54,6 @@
       Gateway=192.168.10.1
       DNS=8.8.8.8
 
-- name: restart systemd-network
-  systemd:
-    name: systemd-network
-    state: restarted
-
 - name: write hostapd.conf
   copy:
     dest: "/etc/hostapd/hostapd.conf"
@@ -88,6 +72,8 @@
       wpa_pairwise=TKIP
       rsn_pairwise=CCMP
 
+
+
 - name: unmask hostapd
   systemd:
     name: hostapd
@@ -102,3 +88,19 @@
   systemd:
     name: hostapd
     state: start
+
+- name: check if br0 exist
+  shell: brctl show | grep br0 | awk '{print $6}' | wc -l
+  register: countBr0tBridgesDevices
+
+- name: brctl addbr br0
+  shell: brctl addbr br0
+  when: countBr0tBridgesDevices.stdout.find('0') != -1
+
+- name: addif br0 eth0 check si plusieurs lancement
+  shell: brctl addif br0 eth0
+
+- name: restart systemd-network
+  systemd:
+    name: systemd-network
+    state: restarted
