@@ -73,9 +73,7 @@
       rsn_pairwise=CCMP
 
 - name: unmask hostapd
-  systemd:
-    name: hostapd
-    state: unmask
+  shell: systemctl unmask hostapd
 
 - name: enable hostapd
   systemd:
