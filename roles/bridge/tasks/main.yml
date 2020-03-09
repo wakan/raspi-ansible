@@ -75,7 +75,7 @@
 - name: unmask hostapd
   systemd:
     name: hostapd
-    state: masked=no
+    masked: no
 
 - name: enable hostapd
   systemd:
