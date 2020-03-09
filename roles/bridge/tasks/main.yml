@@ -73,17 +73,19 @@
       rsn_pairwise=CCMP
 
 - name: unmask hostapd
-  shell: systemctl unmask hostapd
+  systemd:
+    name: hostapd
+    state: masked=no
 
 - name: enable hostapd
   systemd:
     name: hostapd
-    state: enable
+    state: enabled=yes
 
 - name: start hostapd
   systemd:
     name: hostapd
-    state: start
+    state: started
 
 - name: check if br0 exist
   shell: brctl show | grep br0 | awk '{print $6}' | wc -l
