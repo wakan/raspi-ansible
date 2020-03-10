@@ -1,96 +1,172 @@
 ---
-- name: Install hostapd  (state=present is optional)
+- name: Install parprouted  (state=present is optional)
   apt:
-    name: hostapd
+    name: parprouted
     state: present
 
-- name: Install bridge-utils  (state=present is optional)
+- name: Install dhcp-helper  (state=present is optional)
   apt:
-    name: bridge-utils
+    name: dhcp-helper
     state: present
 
-- name: stop service hostapd on debian, if running
+- name: stop et enable service dhcp-helper
   systemd:
-    name: hostapd
+    name: dhcp-helper
     state: stopped
-
-- name: dhcpcd denyinterfaces wlan0
-  lineinfile:
-    path: /etc/dhcpcd.conf
-    regexp: '^denyinterfaces wlan0'
-    line: denyinterfaces wlan0
-
-- name: dhcpcd denyinterfaces eth0
-  lineinfile:
-    path: /etc/dhcpcd.conf
-    regexp: '^denyinterfaces eth0'
-    line: denyinterfaces eth0
-
-- name: write bridge-br0.netdev
-  copy:
-    dest: "/etc/systemd/network/bridge-br0.netdev"
-    content: |
-      [NetDev]
-      Name=br0
-      Kind=bridge
-
-- name: write bridge-br0-slave.network
-  copy:
-    dest: "/etc/systemd/network/bridge-br0-slave.network"
-    content: |
-      [Match]
-      Name=eth0
-      [Network]
-      Bridge=br0
-
-- name: write bridge-br0-slave.network
-  copy:
-    dest: "/etc/systemd/network/bridge-br0.network"
-    content: |
-      [Match]
-      Name=br0
-      [Network]
-      Address=192.168.10.100/24
-      Gateway=192.168.10.1
-      DNS=8.8.8.8
-
-- name: write hostapd.conf
-  copy:
-    dest: "/etc/hostapd/hostapd.conf"
-    content: |
-      interface=wlan0
-      bridge=br0
-      ssid=ChezWaKaNt
-      hw_mode=g
-      channel=7
-      wmm_enabled=0
-      macaddr_acl=0
-      ignore_broadcast_ssid=0
-      wpa=2
-      wpa_passphrase=quatrequatre
-      wpa_key_mgmt=WPA-PSK
-      wpa_pairwise=TKIP
-      rsn_pairwise=CCMP
-
-- name: unmask hostapd
-  systemd:
-    name: hostapd
-    masked: no
     enabled: yes
+
+- name: mask networking.service Prevent the networking and dhcpcd service from running. networking.service is a debian-specific package and not the same as systemd-network
+  systemd:
+    name: networking.service
+    masked: yes
+
+- name: mask dhcpcd.service Disable the dhcpcd service as well.
+  systemd:
+    name: dhcpcd.service
+    masked: yes
+    
+- name: This tells resolvconf to ignore whenever some daemon tries to modify the resolv.conf file - https://wiki.debian.org/resolv.conf
+  shell: sed -i '1i resolvconf=NO' /etc/resolvconf.conf   
+ 
+- name: enable systemd-networkd.service
+  systemd:
+    name: systemd-networkd.service
+    enabled: yes
+
+- name: enable systemd-resolved.service
+  systemd:
+    name: systemd-resolved.service
+    enabled: yes
+
+- name: Create a symbolic link
+  file:
+    src: /run/systemd/resolve/resolv.conf
+    dest: /etc/resolv.conf
+    state: link
+
+- name: write /etc/wpa_supplicant/wpa_supplicant-wlan0.conf
+  copy:
+    dest: /etc/wpa_supplicant/wpa_supplicant-wlan0.conf
+    content: |
+      ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+      update_config=1
+      country=FR
+      network={
+      ssid=ChezWaKaNt
+      psk=quatrequatre
+      }
+      
+- name: Change file wpa_supplicant-wlan0.conf permissions
+  file:
+    path: /etc/wpa_supplicant/wpa_supplicant-wlan0.conf
+    mode: '0600'
+ 
+- name: disable service wpa_supplicant.service
+  systemd:
+    name: wpa_supplicant.service
+    enabled: no
+
+- name: enable service wpa_supplicant@wlan0.service
+  systemd:
+    name: wpa_supplicant@wlan0.service
+    enabled: yes
+
+- name: write /etc/wpa_supplicant/wpa_supplicant-wlan0.conf
+  copy:
+    dest: /etc/wpa_supplicant/wpa_supplicant-wlan0.conf
+    content: |
+      [Match]
+      Name=wlan0
+      [Network]
+      DHCP=yes
+      IPForward=yes
+      
+- name: write /etc/wpa_supplicant/wpa_supplicant-wlan0.conf
+  copy:
+    dest: /etc/wpa_supplicant/wpa_supplicant-wlan0.conf
+    content: |
+      DHCPHELPER_OPTS="-b wlan0"
+       
+- name: write /etc/avahi/avahi-daemon.conf
+  copy:
+    dest: /etc/avahi/avahi-daemon.conf
+    content: |
+      [server]
+      use-ipv4=yes
+      use-ipv6=yes
+      ratelimit-interval-usec=1000000
+      ratelimit-burst=1000
+      [wide-area]
+      enable-wide-area=yes
+      [publish]
+      publish-hinfo=no
+      publish-workstation=no
+      [reflector]
+      enable-reflector=yes
+      [rlimits]
+          
+- name: write /usr/bin/get-adapter-ip
+  copy:
+    dest: /usr/bin/get-adapter-ip
+    content: |
+      #!/usr/bin/env bash
+      /sbin/ip -4 -br addr show ${1} | /bin/grep -Po "\\d+\\.\\d+\\.\\d+\\.\\d+"
+          
+-name: droit d'execution sur get-adapter-ip
+  file:
+    path: /usr/bin/get-adapter-ip
+    mode: a+x
+
+- name: write /etc/systemd/system/parprouted.service
+  copy:
+    dest: /etc/systemd/system/parprouted.service
+    content: |
+      [Unit]
+      Description=proxy arp routing service
+      Documentation=https://raspberrypi.stackexchange.com/q/88954/79866
+      [Service]
+      Type=forking
+      # Restart until wlan0 gained carrier
+      Restart=on-failure
+      RestartSec=5
+      TimeoutStartSec=30
+      ExecStartPre=/lib/systemd/systemd-networkd-wait-online --interface=wlan0 --timeout=6 --quiet
+      ExecStartPre=/bin/echo 'systemd-networkd-wait-online: wlan0 is online'
+      # clone the dhcp-allocated IP to eth0 so dhcp-helper will relay for the correct subnet
+      ExecStartPre=/bin/bash -c '/sbin/ip addr add $(/usr/bin/get-adapter-ip wlan0)/32 dev eth0'
+      ExecStartPre=/sbin/ip link set dev eth0 up
+      ExecStartPre=/sbin/ip link set wlan0 promisc on
+      ExecStart=-/usr/sbin/parprouted eth0 wlan0
+      ExecStopPost=/sbin/ip link set wlan0 promisc off
+      ExecStopPost=/sbin/ip link set dev eth0 down
+      ExecStopPost=/bin/bash -c '/sbin/ip addr del $(/usr/bin/get-adapter-ip eth0)/32 dev eth0'
+      [Install]
+      WantedBy=wpa_supplicant@wlan0.service
+ 
+ 
+ 
+- name: enable service parprouted.service
+  systemd:
+    name: parprouted.service
+    enabled: yes
+    daemon_reload: yes
+
+- name: start wpa_supplicant@wlan0
+  systemd:
+    name: wpa_supplicant@wlan0
     state: started
 
-- name: check if br0 exist
-  shell: brctl show | grep br0 | awk '{print $6}' | wc -l
-  register: countBr0tBridgesDevices
-
-- name: brctl addbr br0
-  shell: brctl addbr br0
-  when: countBr0tBridgesDevices.stdout.find('0') != -1
-
-- name: addif br0 eth0 check si plusieurs lancement
-  shell: brctl addif br0 eth0
-
-- name: restart systemd-network
+- name: start dhcp-helper
   systemd:
-    name: systemd-network
-    state: restarted
+    name: dhcp-helper
+    state: started
+
+- name: start systemd-networkd
+  systemd:
+    name: systemd-networkd
+    state: started
+
+- name: start systemd-resolved
+  systemd:
+    name: systemd-resolved
+    state: started
