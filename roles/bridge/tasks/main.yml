@@ -112,7 +112,7 @@
       #!/usr/bin/env bash
       /sbin/ip -4 -br addr show ${1} | /bin/grep -Po "\\d+\\.\\d+\\.\\d+\\.\\d+"
           
--name: droit d'execution sur get-adapter-ip
+- name: droit d'execution sur get-adapter-ip
   file:
     path: /usr/bin/get-adapter-ip
     mode: a+x
