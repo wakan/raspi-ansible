@@ -43,6 +43,7 @@
     src: /run/systemd/resolve/resolv.conf
     dest: /etc/resolv.conf
     state: link
+    force: yes
 
 - name: write /etc/wpa_supplicant/wpa_supplicant-wlan0.conf
   copy:
